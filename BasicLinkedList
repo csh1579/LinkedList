@@ -1,0 +1,338 @@
+package listClasses;
+import java.util.Comparator;
+import java.util.Iterator;
+
+public class BasicDoubleLinkedList<T> implements Iterable<T>{
+	protected Node head;
+	protected Node tail;
+	protected int N;
+
+
+	public BasicDoubleLinkedList(){
+		N = 0;
+		head = null;
+		tail = null;
+	}
+
+	@Override
+	public Iterator<T> iterator() {
+		return new DoublyListIterator();
+	}
+
+	//returns size of list
+	//must not traverse list to get size
+	public int getSize(){
+		return N;
+	}
+
+	//returns first item in list/does not remove
+	public T getFirst(){
+		return head.data;
+	}
+
+	//returns last item in the list/does not remove
+	public T getLast(){
+		return tail.data;
+	}
+
+	//gets item at 'index'
+	public T get(int index){
+		if(index > N || index < 0) throw new IllegalArgumentException("Invalid index");
+
+		int ind = 0;
+		Node copy = head;
+		while (ind != index){
+			copy =copy.next;
+			ind++;
+		}
+		return copy.data;
+	}
+
+	//adds element at the index position of the list
+	public BasicDoubleLinkedList<T> add(int index, T data){
+		if(index < 0 || index > N) throw new IllegalArgumentException("Invalid index");
+		//if index is negative or greater than one more than the current # of elements, 
+		//declare it invalid.
+
+		//if 'data' to be inserted @ start of list
+		if(index == 0){
+			addToFront(data);
+
+		}
+		//if the index passed through is one more than the total length, throw it on the end
+		else if(index == N){
+
+			//and of course the error here was that the remove method wasn't resetting
+			//the tail in the case of removing the tail.. :)
+			addToEnd(data);
+		}
+		else{
+			Node copy = head;
+			int count = 0;
+			while (count != index-1){//0 based indexing. 
+				copy = copy.next;
+				count++;
+			}
+
+			Node insert = new Node(data);
+			insert.next = copy.next;
+			copy.next.prev = insert;
+			copy.next = insert;
+			insert.prev = copy;
+			N++;
+			//TODO: marking setTail() funct.
+			setTail(copy);
+		}
+		return this;
+	}
+	//adds element to the end of the list
+	public BasicDoubleLinkedList<T> addToEnd(T data){
+		if (head == null){
+			N++;
+			head = new Node(data);
+			tail = head;
+		}
+		else{
+			Node newTail = new Node(data);
+			Node oldTail = tail;
+			tail = newTail;
+			oldTail.next = tail;
+			tail.prev = oldTail;
+			N++;
+			//TODO: marking setTail() funct.
+			//setTail();
+		}
+
+		return this;
+	}
+
+	//adds element to start of the list
+	public BasicDoubleLinkedList<T> addToFront(T data){
+		if (head == null){
+			head = new Node(data);
+			tail = head;
+			N++;
+		}
+		else{
+			Node newHead = new Node(data);
+			Node oldfirst = head;
+			head = newHead;
+			head.next = oldfirst;
+			oldfirst.prev = head;
+			N++;
+			//TODO: marking setTail() funct.
+			//setTail();
+		}
+
+		return this;
+	}
+
+	//Removes ALL instances of targetData from the list
+	public BasicDoubleLinkedList<T> remove(T targetData, Comparator<T> comparator){
+		Node copy = head;	
+		while (copy != null){
+			if (copy == head){//CORNER CASE: HEAD
+				if (comparator.compare(copy.data, targetData) == 0){
+					head = head.next;
+					N--;
+				}//end if
+			}//end if
+
+			else{//for all elements NOT head
+				if (copy.next != null){
+					if (comparator.compare(copy.data,  targetData) == 0){
+						copy.prev.next = copy.next;
+						copy.next.prev = copy.prev;
+						N--;
+					}
+				}
+				if (copy.next == null){
+					if(comparator.compare(copy.data, targetData) == 0){
+						copy.prev.next = copy.next;
+						N--;
+						
+						tail = copy.prev;
+						//TODO: marking setTail() funct.
+						//setTail();
+					}
+				}
+			}
+			copy = copy.next;
+		}
+		return this;
+	}
+	//Removes and returns the element at the index position from the list (zero indexed).
+	public T retrieve(int index){
+		if(index > N || index < 0) throw new IllegalArgumentException("Invalid index");
+
+		if(index == 0){//CORNER CASE: first element
+			Node current = head;
+			head = head.next;
+			N--;
+			return current.data;
+		}
+		else{
+			int ind = 0;
+			Node copy = head;
+			while (ind != index){
+				copy = copy.next;
+				ind++;
+			}
+			//at this point, copy = node to be removed
+
+			Node current = copy;//copies node that needs deletion.
+			//deletes the node at index 'index'
+			T send = current.data;
+			current.prev.next = current.next;
+			current.next.prev = current.prev;
+			N--;
+			while (current != null){
+				if (current.next == null){//reached last element
+					tail = current;
+					break;
+				}
+				current = current.next;
+			}
+			//TODO: marking setTail() funct.
+			//setTail(copy);
+			return send;
+		}
+	}
+	//Removes and returns the first element from the list.
+	public T retrieveFirstElement(){//no reason for tail to change here..
+		if(head == null) throw new NullPointerException("List is empty");//means list is empty.
+		Node copy = head;
+		head = head.next;
+		N--;
+		return copy.data;
+	}
+
+	//Removes and returns the last element from the list.
+	public T retrieveLastElement(){
+		if(head == null) throw new NullPointerException("List is empty");//means list is empty.
+		Node copy = tail;
+		tail.prev.next = null;
+		N--;
+		tail = tail.prev;
+		//TODO: marking setTail() funct.
+		//setTail(copy);
+		return copy.data;
+	}
+
+	/* helper method */
+	public void setTail(){
+		if(head == null) throw new NullPointerException("List is empty");
+		else{//if list HAS elements.
+			Node copy = head;
+
+			while (copy != null){
+				if (copy.next == null){
+					tail = copy;
+					break;
+				}
+				copy = copy.next;
+			}
+		}
+	}
+
+	/* helper method: doesnt restart list iteration.. maybe this will
+	 * solve the mystery of test 4? */
+	public void setTail(Node n){
+		if(head == null) throw new NullPointerException("List is empty");
+		else{//if list HAS elements.
+			Node copy = n;
+
+			while (copy != null){
+				if (copy.next == null){
+					tail = copy;
+					break;
+				}
+				copy = copy.next;
+			}
+		}
+	}
+
+	/**
+	 * DoublyListIterator
+	 * @author Cory
+	 *
+	 */
+	private class DoublyListIterator implements Iterator<T>{
+		private Node current;
+		private Node lastAccessed;
+		private int index ;
+		DoublyListIterator(){
+			current = head;
+			lastAccessed = null;
+			index = 0;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return index < N;
+		}
+
+		@Override
+		public T next() {
+			if (!hasNext()) return null;
+
+			lastAccessed = current;
+			T thing = current.data;
+			current = current.next;
+			index++;
+			return thing;
+		}
+
+		public boolean hasPrevious(){
+			return index > 0;
+		}
+
+		@SuppressWarnings("unused")
+		public T previous(){
+			if(!hasPrevious()) return null;
+
+			current = current.prev;
+			lastAccessed = current;
+			index--;
+			return current.data;
+		}
+
+		@SuppressWarnings("unused")
+		public int nextIndex(){
+			return index+1;
+		}
+
+		@SuppressWarnings("unused")
+		public int prevIndex(){
+			return index;
+		}
+	}
+
+	class Node{
+		protected T data;
+		protected Node prev;
+		protected Node next;
+		Node(T item){
+			data = item;
+			prev = null;
+			next = null;
+		}
+		Node(){
+			data = null;
+			prev = null;
+			next = null;
+		}
+		@Override
+		public String toString(){
+			StringBuilder s = new StringBuilder();
+			Node current = head;
+			while (current != tail){
+				s.append(current.data+ ", ");
+				current = current.next;
+			}
+			return s.toString();
+		}
+	}
+
+
+}
