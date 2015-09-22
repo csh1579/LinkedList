@@ -1,0 +1,124 @@
+package listClasses;
+
+import java.util.Comparator;
+
+public class SortedDoubleLinkedList<T> extends BasicDoubleLinkedList<T> implements Iterable<T>{
+	protected Comparator<T> comp;	
+	/**
+	 * Creates an empty list that is associated with the specified comparator. 
+	 * It must call the super class constructor to initialize the appropriate variables.
+	 * @param comparator
+	 */
+	public SortedDoubleLinkedList(Comparator<T> comparator){
+		super();
+		comp = comparator;
+	}
+	/**
+	 * Inserts the specified element at the correct position in the sorted list. Notice we can insert the same element several times. 
+	 * Your implementation must traverse the list only once in order to perform the insertion. 
+	 * Do not implement this method using iterators. 
+	 * Notice that you don't need to call any of the super class methods in order to implement this method. 
+	 * Take care of the double references for every node.
+	 * @param element
+	 */
+	public SortedDoubleLinkedList<T> add(T element){
+		//COMPLETE
+		if ( head == null){//no elements are in list
+			Node a = new Node(element);
+			head = a;
+			tail = a;
+			N++;
+		}
+		else{//elements are in list.
+			Node copy = head;
+			while (copy != null){
+				if(copy == head && comp.compare(element, copy.data) <= 0){//if element <= head
+					Node oldfirst = head;
+					head = new Node(element);
+					head.next = oldfirst;
+					oldfirst.prev = head;
+					N++;
+					break;
+				}
+				else if (copy != head && comp.compare(element, copy.data) <= 0){//if element is less than or = curr elements data
+					Node newEl = new Node(element);
+					//insert new node in front of bigger element.
+					copy.prev.next = newEl;
+					newEl.prev = copy.prev;
+					newEl.next = copy;
+					copy.prev = newEl;
+					N++;
+					break;
+				}
+				if(copy.next == null){//reached end of list w/o adding
+					//super.addToEnd(element);
+					Node newTail = new Node(element);
+					Node oldTail = tail;
+					tail = newTail;
+					oldTail.next = tail;
+					tail.prev = oldTail;
+					N++;
+					//TODO: Marking setTail() funct.
+					setTail(copy);
+					break;
+				}
+				copy = copy.next;
+			}
+		}
+		return this;
+	}
+
+	/**
+	 * Merges two SortedLinkedLists. 
+	 * The returned reference to the current list has all the elements of the list passed as the parameter. 
+	 * Do not implement using iterators.
+	 * @param list
+	 */
+	public SortedDoubleLinkedList<T> merge(SortedDoubleLinkedList<T> list){
+		Node argCopy = list.head;
+		while (argCopy != null){
+			//SDLL can have duplicates
+			this.add(argCopy.data);
+			argCopy = argCopy.next;
+		}
+		return this;
+	}
+
+	/**
+	 * Implements the remove operation by calling the super class remove method.
+	 * @param targetData
+	 */
+	public SortedDoubleLinkedList<T> remove(T targetData){
+		// I think this works.
+		super.remove(targetData, comp);
+		return this;
+	}
+
+	/**
+	 * This operation is invalid for a sorted list. 
+	 * An UnsupportedOperationException will be generated using the message "Invalid operation for sorted list."
+	 */
+	@Override
+	public BasicDoubleLinkedList<T> addToEnd(T data){
+		throw new UnsupportedOperationException("Invalid operation for sorted list.");
+	}
+	
+	/**
+	 * This operation is invalid for a sorted list. 
+	 * An UnsupportedOperationException will be generated using the message "Invalid operation for sorted list."
+	 */
+	@Override
+	public BasicDoubleLinkedList<T> add(int index, T data){
+		throw new UnsupportedOperationException("Invalid operation for sorted list.");
+	}
+
+	/**
+	 * This operation is invalid for a sorted list. 
+	 * An UnsupportedOperationException will be generated using the message "Invalid operation for sorted list."
+	 */
+	//done
+	@Override
+	public BasicDoubleLinkedList<T> addToFront(T data){
+		throw new UnsupportedOperationException("Invalid operation for sorted list.");
+	}
+}
